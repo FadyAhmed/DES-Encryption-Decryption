@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -141,7 +142,7 @@ string binary_to_hexa(string s) {
 	bin_hexa["1111"] = "F";
 
 	string out = "";
-	for (int i = 0; i < s.size(); i+=4) {
+	for (int i = 0; i < s.size(); i += 4) {
 		out += bin_hexa[s.substr(i, 4)];
 	}
 	return out;
@@ -197,11 +198,11 @@ string roundFunction(string leftText, string rightText, string functionKey) {
 	string subResult = "";
 	for (int i = 0; i < 8; i++) {
 		int row = 2 * int(function_xor_result[i * 6] - '0') +
-					int(function_xor_result[i * 6 + 5] - '0');
-					int col = 8 * int(function_xor_result[i * 6 + 1] - '0') +
-					4 * int(function_xor_result[i * 6 + 2] - '0') +
-					2 * int(function_xor_result[i * 6 + 3] - '0') +
-					int(function_xor_result[i * 6 + 4] - '0');
+			int(function_xor_result[i * 6 + 5] - '0');
+		int col = 8 * int(function_xor_result[i * 6 + 1] - '0') +
+			4 * int(function_xor_result[i * 6 + 2] - '0') +
+			2 * int(function_xor_result[i * 6 + 3] - '0') +
+			int(function_xor_result[i * 6 + 4] - '0');
 		int val = s_box[i][row][col];
 		subResult += char(val / 8 + '0');
 		val = val % 8;
@@ -213,24 +214,25 @@ string roundFunction(string leftText, string rightText, string functionKey) {
 	}
 
 	string rightResult = xor_strings(leftText, permute(subResult, function_last_permutation, 32));
-	
+
 	return rightResult;
 }
 
-int main() {
-	string text = "8787878787878787";
+int main(int argc, char* argv[]) {
+	string operation = argv[1];
 
-	string key = "0E329232EA6D0D73";
+	string cipher = "";
+	vector<string> roundsKeys;
+	string text = argv[2];
+	string key = argv[3];
 
 	key = hexa_to_binary(key);
 
 	// do choice 1 permutation
-	key = permute(key,choice1_permutation_table, 56);
+	key = permute(key, choice1_permutation_table, 56);
 
 	string leftKey = key.substr(0, 28);
 	string rightKey = key.substr(28, 28);
-
-	string cipher = "";
 
 	string binaryText = hexa_to_binary(text);
 	// do text initial permutation
@@ -239,53 +241,44 @@ int main() {
 	string leftBinaryText = binaryText.substr(0, 32);
 	string rightBinaryText = binaryText.substr(32, 32);
 
-	vector<string> roundsKeys;
-
-	// encrypt
-	for(int i = 0; i < 16; i++){
+	// generate keys
+	for (int i = 0; i < 16; i++) {
 		// now we need to generate key for each round
 		leftKey = lift_shift_s(leftKey, i);
 		rightKey = lift_shift_s(rightKey, i);
 
 
 		// make perm choice 2 
-		string thisRoundFunctionKey = permute(leftKey + rightKey, choice2_permutation_table , 48);
+		string thisRoundFunctionKey = permute(leftKey + rightKey, choice2_permutation_table, 48);
 
 		// to save it for decryption
 		roundsKeys.push_back(thisRoundFunctionKey);
+	}
 
+	for (int i = 0; i < 16; i++) {
 		// do the round
-		string rightResult = roundFunction(leftBinaryText, rightBinaryText, thisRoundFunctionKey);
+		string rightResult;
+
+		if (operation == "encrypt") {
+			rightResult = roundFunction(leftBinaryText, rightBinaryText, roundsKeys[i]);
+		}
+		else {
+			rightResult = roundFunction(leftBinaryText, rightBinaryText, roundsKeys[16 - i - 1]);
+		}
+
 		leftBinaryText = rightResult;
 
 		if (i < 15) {
 			swap(leftBinaryText, rightBinaryText);
 		}
 	}
-	cipher = binary_to_hexa(permute(leftBinaryText + rightBinaryText, inverse_permutation,64));
-	cout << cipher<<"\n";
-	
-	// decription
-
-	string binaryCipherText = hexa_to_binary(cipher);
-
-	// do text initial permutation
-	binaryCipherText = permute(binaryCipherText, initial_permutation_table, 64);
-
-	string leftCipherText = binaryCipherText.substr(0, 32);
-	string rightCipherText = binaryCipherText.substr(32, 32);
-
-	for (int i = 0; i < 16; i++) {
-		// do the round
-		string rightResult = roundFunction(leftCipherText, rightCipherText, roundsKeys[16-i-1]);
-		leftCipherText = rightResult;
-
-		if (i < 15) {
-			swap(leftCipherText, rightCipherText);
-		}
+	cipher = binary_to_hexa(permute(leftBinaryText + rightBinaryText, inverse_permutation, 64));
+	if (operation == "encrypt") {
+		cout << "cipher: " << cipher << "\n";
 	}
-	cipher = binary_to_hexa(permute(leftCipherText + rightCipherText, inverse_permutation, 64));
-	cout << cipher << "\n";
+	else {
+		cout << "plain: " << cipher << "\n";
+	}
 
 	return 0;
 }
