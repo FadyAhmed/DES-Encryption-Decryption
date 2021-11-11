@@ -12,6 +12,20 @@ int choice1_permutation_table[56] = { 57, 49, 41, 33, 25, 17, 9,
 				14, 6, 61, 53, 45, 37, 29,
 				21, 13, 5, 28, 20, 12, 4 };
 
+int shift_size_table[16] = { 1, 1, 2, 2,
+						2, 2, 2, 2,
+						1, 2, 2, 2,
+						2, 2, 2, 1 };
+
+int choice2_permutation_table[48] = { 14, 17, 11, 24, 1, 5,
+						3, 28, 15, 6, 21, 10,
+						23, 19, 12, 4, 26, 8,
+						16, 7, 27, 20, 13, 2,
+						41, 52, 31, 37, 47, 55,
+						30, 40, 51, 45, 33, 48,
+						44, 49, 39, 56, 34, 53,
+						46, 42, 50, 36, 29, 32 };
+
 string hexa_to_binary(string s) {
 	unordered_map<char, string> hex_bin;
 	hex_bin['0'] = "0000";
@@ -73,6 +87,23 @@ string permute(string input, int* arrayOfPermutation, int outputSize)
 	return permutedText;
 }
 
+string lift_shift_s(string key, int round)
+{
+	int noOfShifts = shift_size_table[round];
+	string s = "";
+
+	for (int i = 0; i < noOfShifts; i++) {
+		// this loop for one bit shift
+		for (int j = 1; j < 28; j++) {
+			s += key[j];
+		}
+		s += key[0];
+		key = s;
+		s = "";
+	}
+	return key;
+}
+
 int main() {
 	string text = "ADF12505FF";
 	cout << "Text: " << text<<"\n";
@@ -92,7 +123,15 @@ int main() {
 
 	for(int i = 0; i < 16; i++){
 		// now we need to generate key for each round
+		leftKey = lift_shift_s(leftKey, i);
+		rightKey = lift_shift_s(rightKey, i);
+		cout << "After round " <<i<<" left key: "<< leftKey << "\n";
+		cout << "After round " << i << " right key: " << rightKey << "\n";
+
 		// make perm choice 2 
+		string thisRoundFunctionKey = permute(leftKey + rightKey, choice2_permutation_table , 48);
+		cout << "After choice 2 key: " << thisRoundFunctionKey << "\n";
+
 		// do the round
 	}
 	
