@@ -3,6 +3,15 @@
 
 using namespace std;
 
+int choice1_permutation_table[56] = { 57, 49, 41, 33, 25, 17, 9,
+				1, 58, 50, 42, 34, 26, 18,
+				10, 2, 59, 51, 43, 35, 27,
+				19, 11, 3, 60, 52, 44, 36,
+				63, 55, 47, 39, 31, 23, 15,
+				7, 62, 54, 46, 38, 30, 22,
+				14, 6, 61, 53, 45, 37, 29,
+				21, 13, 5, 28, 20, 12, 4 };
+
 string hexa_to_binary(string s) {
 	unordered_map<char, string> hex_bin;
 	hex_bin['0'] = "0000";
@@ -55,6 +64,15 @@ string binary_to_hexa(string s) {
 	return out;
 }
 
+string permute(string input, int* arrayOfPermutation, int outputSize)
+{
+	string permutedText = "";
+	for (int i = 0; i < outputSize; i++) {
+		permutedText += input[arrayOfPermutation[i] - 1];
+	}
+	return permutedText;
+}
+
 int main() {
 	string text = "ADF12505FF";
 	cout << "Text: " << text<<"\n";
@@ -65,5 +83,18 @@ int main() {
 	text = binary_to_hexa(text);
 	cout << "hexa: " << text << "\n";
 
+	string key = "FAFF091A1D36BDCA";
+	key = permute(hexa_to_binary(key), choice1_permutation_table, 56);
+	cout <<"After choice 1 key: "<< key << "\n";
+
+	string leftKey = key.substr(0, 28);
+	string rightKey = key.substr(28, 28);
+
+	for(int i = 0; i < 16; i++){
+		// now we need to generate key for each round
+		// make perm choice 2 
+		// do the round
+	}
+	
 	return 0;
 }
